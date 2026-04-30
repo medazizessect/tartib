@@ -228,7 +228,12 @@ if (in_array($type, ['step3_expert_request','step4_expert_report'], true)) {
         .predef-btn.selected{background:#2e6da4;color:#fff}
         .commission-hint{font-size:11px;color:#777;margin-top:8px}
         @media(max-width:700px){.grid{grid-template-columns:1fr}}
+        #map-container{grid-column:1/-1;margin-top:4px}
+        #intervention-map{height:340px;border-radius:10px;border:2px solid #e9ecef;width:100%;z-index:0}
+        .map-hint{font-size:11px;color:#777;margin-top:5px}
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs=" crossorigin=""></script>
 </head>
 <body>
 <?php include '_menu.php'; ?>
@@ -277,6 +282,11 @@ if (in_array($type, ['step3_expert_request','step4_expert_report'], true)) {
                     </datalist>
                 </div>
                 <div><label><input type="checkbox" name="forward_to_ministry" value="1" <?= !empty($doc['forward_to_ministry']) ? 'checked' : '' ?>> توجيه وزارة التجهيز (اختياري)</label></div>
+                <div id="map-container" class="full">
+                    <label>🗺️ خريطة موقع التدخل</label>
+                    <div id="intervention-map"></div>
+                    <p class="map-hint">📍 تحديد العنوان أعلاه يُحدّد تلقائياً موقع التدخل على الخريطة.</p>
+                </div>
                 <div class="full">
                     <label>أعضاء اللجنة</label>
                     <?php $commissionValue = $doc['commission_members'] ?? ($case['commission'] ?? ''); include '_commission.php'; ?>
@@ -359,6 +369,64 @@ document.addEventListener('DOMContentLoaded',function(){
             var id = addrMap[this.value];
             addrHidden.value = id ? id : '';
         });
+    }
+
+    // Interactive map with Leaflet.js + OpenStreetMap
+    var mapEl = document.getElementById('intervention-map');
+    if (mapEl) {
+        // Default center: Sousse, Tunisia
+        var defaultLat = 35.8256, defaultLon = 10.6369;
+        var map = L.map('intervention-map').setView([defaultLat, defaultLon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        var marker = null;
+
+        function placeMarker(lat, lon, label) {
+            if (marker) { map.removeLayer(marker); }
+            marker = L.marker([lat, lon]).addTo(map);
+            if (label) { marker.bindPopup('<b>' + label + '</b>').openPopup(); }
+            map.setView([lat, lon], 16);
+        }
+
+        // Load street coordinates from shapefile-derived JSON
+        fetch('streets_coords.json')
+            .then(function(r){ return r.json(); })
+            .then(function(streetsCoords) {
+                function updateMapByAddress(label) {
+                    if (!label) return;
+                    // Exact match first
+                    if (streetsCoords[label]) {
+                        var coords = streetsCoords[label];
+                        placeMarker(coords[0], coords[1], label);
+                        return;
+                    }
+                    // Partial match fallback (only on explicit selection/change)
+                    var keys = Object.keys(streetsCoords);
+                    for (var i = 0; i < keys.length; i++) {
+                        if (keys[i].indexOf(label) !== -1 || label.indexOf(keys[i]) !== -1) {
+                            placeMarker(streetsCoords[keys[i]][0], streetsCoords[keys[i]][1], label);
+                            return;
+                        }
+                    }
+                }
+
+                // If address already selected on page load, show on map
+                if (addrInput && addrInput.value.trim()) {
+                    updateMapByAddress(addrInput.value.trim());
+                }
+
+                // Update map only on explicit selection (change event) to avoid per-keystroke searches
+                if (addrInput) {
+                    addrInput.addEventListener('change', function(){ updateMapByAddress(this.value.trim()); });
+                }
+            })
+            .catch(function(){
+                // If streets_coords.json fails to load, map still shows Sousse
+            });
     }
 });
 </script>
