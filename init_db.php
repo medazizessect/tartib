@@ -213,7 +213,9 @@ try {
     </head><body><div class='b'><h2>✅ تم تحديث قاعدة البيانات</h2>
     <p>خطوات جديدة + أدوار + عناوين + حالات محضر</p>
     <p>عدد العناوين: ".(int)$pdo->query("SELECT COUNT(*) FROM adresses")->fetchColumn()."</p>
-    <a href='index.php'>الدخول للتطبيق</a></div></body></html>";
+    <a href='index.php'>الدخول للتطبيق</a>
+    <a href='import_batiments.php' style='margin-right:10px;background:#28a745'>📥 استيراد البنايات</a>
+    </div></body></html>";
 } catch (PDOException $e) {
     die("<div style='font-family:Arial;color:red;padding:20px'>❌ ".$e->getMessage()."</div>");
 }

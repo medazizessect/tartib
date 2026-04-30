@@ -123,6 +123,22 @@ input,select{padding:7px 9px;border:1px solid #ddd;border-radius:7px;width:100%;
 <?php if (!empty($_GET['ok'])): ?><div style="background:#d4edda;padding:10px;border:1px solid #c3e6cb;border-radius:8px;margin-bottom:10px">✅ تم الحفظ</div><?php endif; ?>
 
 <div class="card">
+    <h3>📥 استيراد البنايات من ملف Excel</h3>
+    <p style="font-size:13px;color:#555;margin:6px 0 12px">
+        يمكنك استيراد بيانات البنايات المتداعية للسقوط مباشرةً من الملف
+        <strong>«liste des batiments menacés ruine (1).xlsx»</strong>
+        الموجود في مجلد التطبيق.
+        سيتم تجاهل السجلات المكررة، وسيتم توليد مراحل عشوائية للمحاكاة.
+    </p>
+    <a href="import_batiments.php"
+       onclick="return confirm('هل تريد تشغيل الاستيراد الآن؟ سيتم إضافة البنايات الجديدة فقط (لن تُحذف البيانات الحالية).')"
+       style="display:inline-block;padding:9px 20px;background:#1a3c5e;color:#fff;
+              border-radius:8px;text-decoration:none;font-size:13px">
+        ▶️ تشغيل الاستيراد
+    </a>
+</div>
+
+<div class="card">
     <h3>أعضاء اللجنة</h3>
     <form method="POST" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <input type="hidden" name="action" value="add_commission_member">
